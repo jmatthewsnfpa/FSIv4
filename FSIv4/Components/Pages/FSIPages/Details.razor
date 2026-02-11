@@ -1,0 +1,212 @@
+﻿@page "/fsis/details"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FSIv4.Data.Models
+@inject IDbContextFactory<FSIv4.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin, Owner, Reader")]
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>FSI</h2>
+    <hr />
+    @if (fsi is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-2">NfirsId</dt>
+            <dd class="col-sm-10">@fsi.NfirsId</dd>
+            <dt class="col-sm-2">FdName</dt>
+            <dd class="col-sm-10">@fsi.FdName</dd>
+            <dt class="col-sm-2">CreatedDt</dt>
+            <dd class="col-sm-10">@fsi.CreatedDt</dd>
+            <dt class="col-sm-2">UpdatedDt</dt>
+            <dd class="col-sm-10">@fsi.UpdatedDt</dd>
+            <dt class="col-sm-2">Street</dt>
+            <dd class="col-sm-10">@fsi.Street</dd>
+            <dt class="col-sm-2">Street2</dt>
+            <dd class="col-sm-10">@fsi.Street2</dd>
+            <dt class="col-sm-2">City</dt>
+            <dd class="col-sm-10">@fsi.City</dd>
+            <dt class="col-sm-2">CountyNo</dt>
+            <dd class="col-sm-10">@fsi.CountyNo</dd>
+            <dt class="col-sm-2">State</dt>
+            <dd class="col-sm-10">@fsi.State</dd>
+            <dt class="col-sm-2">StateId</dt>
+            <dd class="col-sm-10">@fsi.StateId</dd>
+            <dt class="col-sm-2">StateGroup</dt>
+            <dd class="col-sm-10">@fsi.StateGroup</dd>
+            <dt class="col-sm-2">StateGroupOverride</dt>
+            <dd class="col-sm-10">@fsi.StateGroupOverride</dd>
+            <dt class="col-sm-2">Zipcode</dt>
+            <dd class="col-sm-10">@fsi.Zipcode</dd>
+            <dt class="col-sm-2">Zipcode2</dt>
+            <dd class="col-sm-10">@fsi.Zipcode2</dd>
+            <dt class="col-sm-2">Region</dt>
+            <dd class="col-sm-10">@fsi.Region</dd>
+            <dt class="col-sm-2">Country</dt>
+            <dd class="col-sm-10">@fsi.Country</dd>
+            <dt class="col-sm-2">AddressDt</dt>
+            <dd class="col-sm-10">@fsi.AddressDt</dd>
+            <dt class="col-sm-2">Phone</dt>
+            <dd class="col-sm-10">@fsi.Phone</dd>
+            <dt class="col-sm-2">PhoneDt</dt>
+            <dd class="col-sm-10">@fsi.PhoneDt</dd>
+            <dt class="col-sm-2">Email</dt>
+            <dd class="col-sm-10">@fsi.Email</dd>
+            <dt class="col-sm-2">EmailDt</dt>
+            <dd class="col-sm-10">@fsi.EmailDt</dd>
+            <dt class="col-sm-2">Fax</dt>
+            <dd class="col-sm-10">@fsi.Fax</dd>
+            <dt class="col-sm-2">FaxDt</dt>
+            <dd class="col-sm-10">@fsi.FaxDt</dd>
+            <dt class="col-sm-2">ContactName</dt>
+            <dd class="col-sm-10">@fsi.ContactName</dd>
+            <dt class="col-sm-2">ContactRank</dt>
+            <dd class="col-sm-10">@fsi.ContactRank</dd>
+            <dt class="col-sm-2">ContactRankId</dt>
+            <dd class="col-sm-10">@fsi.ContactRankId</dd>
+            <dt class="col-sm-2">ContactDt</dt>
+            <dd class="col-sm-10">@fsi.ContactDt</dd>
+            <dt class="col-sm-2">RecordType</dt>
+            <dd class="col-sm-10">@fsi.RecordType</dd>
+            <dt class="col-sm-2">RecordTypeId</dt>
+            <dd class="col-sm-10">@fsi.RecordTypeId</dd>
+            <dt class="col-sm-2">RecordStatus</dt>
+            <dd class="col-sm-10">@fsi.RecordStatus</dd>
+            <dt class="col-sm-2">CrossRefId</dt>
+            <dd class="col-sm-10">@fsi.CrossRefId</dd>
+            <dt class="col-sm-2">SmSa</dt>
+            <dd class="col-sm-10">@fsi.SmSa</dd>
+            <dt class="col-sm-2">DataSource</dt>
+            <dd class="col-sm-10">@fsi.DataSource</dd>
+            <dt class="col-sm-2">SquareMiles</dt>
+            <dd class="col-sm-10">@fsi.SquareMiles</dd>
+            <dt class="col-sm-2">Community</dt>
+            <dd class="col-sm-10">@fsi.Community</dd>
+            <dt class="col-sm-2">CommunityId</dt>
+            <dd class="col-sm-10">@fsi.CommunityId</dd>
+            <dt class="col-sm-2">Population</dt>
+            <dd class="col-sm-10">@fsi.Population</dd>
+            <dt class="col-sm-2">PopInterval</dt>
+            <dd class="col-sm-10">@fsi.PopInterval</dd>
+            <dt class="col-sm-2">PopIntervalId</dt>
+            <dd class="col-sm-10">@fsi.PopIntervalId</dd>
+            <dt class="col-sm-2">TypeEmps</dt>
+            <dd class="col-sm-10">@fsi.TypeEmps</dd>
+            <dt class="col-sm-2">TypeEmpsId</dt>
+            <dd class="col-sm-10">@fsi.TypeEmpsId</dd>
+            <dt class="col-sm-2">PaidEmps</dt>
+            <dd class="col-sm-10">@fsi.PaidEmps</dd>
+            <dt class="col-sm-2">PaidEmpsWomen</dt>
+            <dd class="col-sm-10">@fsi.PaidEmpsWomen</dd>
+            <dt class="col-sm-2">WorkWeek</dt>
+            <dd class="col-sm-10">@fsi.WorkWeek</dd>
+            <dt class="col-sm-2">EmpsPerShift</dt>
+            <dd class="col-sm-10">@fsi.EmpsPerShift</dd>
+            <dt class="col-sm-2">VolsComp</dt>
+            <dd class="col-sm-10">@fsi.VolsComp</dd>
+            <dt class="col-sm-2">Vols</dt>
+            <dd class="col-sm-10">@fsi.Vols</dd>
+            <dt class="col-sm-2">VolsWomen</dt>
+            <dd class="col-sm-10">@fsi.VolsWomen</dd>
+            <dt class="col-sm-2">Pumpers</dt>
+            <dd class="col-sm-10">@fsi.Pumpers</dd>
+            <dt class="col-sm-2">Ladders</dt>
+            <dd class="col-sm-10">@fsi.Ladders</dd>
+            <dt class="col-sm-2">Combo</dt>
+            <dd class="col-sm-10">@fsi.Combo</dd>
+            <dt class="col-sm-2">MarineVessels</dt>
+            <dd class="col-sm-10">@fsi.MarineVessels</dd>
+            <dt class="col-sm-2">OtherSupport</dt>
+            <dd class="col-sm-10">@fsi.OtherSupport</dd>
+            <dt class="col-sm-2">OtherVehicles</dt>
+            <dd class="col-sm-10">@fsi.OtherVehicles</dd>
+            <dt class="col-sm-2">ThermalEquipment</dt>
+            <dd class="col-sm-10">@fsi.ThermalEquipment</dd>
+            <dt class="col-sm-2">Stations</dt>
+            <dd class="col-sm-10">@fsi.Stations</dd>
+            <dt class="col-sm-2">Ems</dt>
+            <dd class="col-sm-10">@fsi.Ems</dd>
+            <dt class="col-sm-2">EmsId</dt>
+            <dd class="col-sm-10">@fsi.EmsId</dd>
+            <dt class="col-sm-2">Ambulance</dt>
+            <dd class="col-sm-10">@fsi.Ambulance</dd>
+            <dt class="col-sm-2">Dispatch</dt>
+            <dd class="col-sm-10">@fsi.Dispatch</dd>
+            <dt class="col-sm-2">DispatchId</dt>
+            <dd class="col-sm-10">@fsi.DispatchId</dd>
+            <dt class="col-sm-2">Training</dt>
+            <dd class="col-sm-10">@fsi.Training</dd>
+            <dt class="col-sm-2">TrainingId</dt>
+            <dd class="col-sm-10">@fsi.TrainingId</dd>
+            <dt class="col-sm-2">CodeEnforcement</dt>
+            <dd class="col-sm-10">@fsi.CodeEnforcement</dd>
+            <dt class="col-sm-2">CodeEnforcementId</dt>
+            <dd class="col-sm-10">@fsi.CodeEnforcementId</dd>
+            <dt class="col-sm-2">LastReturned</dt>
+            <dd class="col-sm-10">@fsi.LastReturned</dd>
+            <dt class="col-sm-2">LastSent</dt>
+            <dd class="col-sm-10">@fsi.LastSent</dd>
+            <dt class="col-sm-2">Notes</dt>
+            <dd class="col-sm-10">@fsi.Notes</dd>
+            <dt class="col-sm-2">FdSurveyStatus1</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyStatus1</dd>
+            <dt class="col-sm-2">FdSurveyStatus2</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyStatus2</dd>
+            <dt class="col-sm-2">FdSurveyStatus3</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyStatus3</dd>
+            <dt class="col-sm-2">FdSurveyStatus4</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyStatus4</dd>
+            <dt class="col-sm-2">FdSurveyStatus5</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyStatus5</dd>
+            <dt class="col-sm-2">FdSurveyStatus6</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyStatus6</dd>
+            <dt class="col-sm-2">FdSurveyStatus7</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyStatus7</dd>
+            <dt class="col-sm-2">FdSurveyYears1</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyYears1</dd>
+            <dt class="col-sm-2">FdSurveyYears2</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyYears2</dd>
+            <dt class="col-sm-2">FdSurveyYears3</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyYears3</dd>
+            <dt class="col-sm-2">FdSurveyYears4</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyYears4</dd>
+            <dt class="col-sm-2">FdSurveyYears5</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyYears5</dd>
+            <dt class="col-sm-2">FdSurveyYears6</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyYears6</dd>
+            <dt class="col-sm-2">FdSurveyYears7</dt>
+            <dd class="col-sm-10">@fsi.FdSurveyYears7</dd>
+        </dl>
+        <div>
+            <a href="@($"/fsis/edit?nfpafdid={fsi.NfpaFdid}")">Edit</a> |
+            <a href="@($"/fsis")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private FSI? fsi;
+
+    [SupplyParameterFromQuery]
+    private int NfpaFdid { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        fsi = await context.FSI.FirstOrDefaultAsync(m => m.NfpaFdid == NfpaFdid);
+
+        if (fsi is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

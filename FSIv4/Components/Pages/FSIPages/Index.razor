@@ -1,0 +1,274 @@
+﻿@page "/fsis"
+@using FSIv4.Data.Helpers
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using FSIv4.Data.Models
+@using FSIv4.Data
+@inject IDbContextFactory<FSIv4.Data.ApplicationDbContext> DbFactory
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin, Owner, Reader")]
+
+<PageTitle>Index</PageTitle>
+
+<h1>Manage Departments</h1>
+
+<br />
+
+<AuthorizeView Roles="Admin, Owner">
+    <p>
+        <a class="btn btn-primary" href="fsis/create">Create New</a>
+    </p>
+</AuthorizeView>
+
+@* <div>
+    Show:
+    <label style="margin-left: 10px; margin-right: 20px;"><input type="checkbox" @bind="showStateGroup" />State Group</label>
+    <label style="margin-right: 20px;"><input type="checkbox" @bind="showRegion" />Region</label>
+    <label style="margin-right: 20px;"><input type="checkbox" @bind="showCountry" />Country</label>
+    <label style="margin-right: 20px;"><input type="checkbox" @bind="showPhone" />RecordType</label>
+    <label style="margin-right: 20px;"><input type="checkbox" @bind="showPhone" />ContactRank</label>
+    <label style="margin-right: 20px;"><input type="checkbox" @bind="showPhone" />PopulationInterval</label>
+    <label style="margin-right: 20px;"><input type="checkbox" @bind="showPhone" />LastRetuned</label>
+    <label style="margin-right: 20px;"><input type="checkbox" @bind="showPhone" />LastSent</label>
+    <label><input type="checkbox" @bind="showEmail" />Email</label>
+</div> *@
+
+<div class="page-size-chooser">
+    Items per page:
+    <select @bind="@pagination.ItemsPerPage">
+        <option>5</option>
+        <option>10</option>
+        <option>20</option>
+        <option>50</option>
+        <option>100</option>
+    </select>
+</div>
+
+<br />
+
+<QuickGrid Class="table" Items="DepartmentsQueryable" Pagination="pagination">
+    <PropertyColumn Property="fsi => fsi.NfpaFdid" Sortable="true" Title="NFPA FDID">
+        <ColumnOptions>
+            <input type="search" @bind="fsiFilter" @bind:event="onchange" placeholder="Search FDID..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="fsi => fsi.NfirsId" Sortable="true" Title="NFIRS ID">
+        <ColumnOptions>
+            <input type="search" @bind="nfirsFilter" @bind:event="onchange" placeholder="Search NFIRS ID..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="fsi => fsi.FdName" Sortable="true" Title="Department Name">
+        <ColumnOptions>
+            <input type="search" @bind="departmentFilter" @bind:event="onchange" placeholder="Search Department Name..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    @* <PropertyColumn Property="fsi => fsi.Street" />
+    <PropertyColumn Property="fsi => fsi.Street2" /> *@
+    <PropertyColumn Property="fsi => fsi.City" Sortable="true" Title="City">
+        <ColumnOptions>
+            <input type="search" @bind="cityFilter" @bind:event="onchange" placeholder="Search Cities..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    @* <PropertyColumn Property="fsi => fsi.CountyNo" /> *@
+    <PropertyColumn Property="fsi => fsi.State" Sortable="true" Title="State">
+        <ColumnOptions>
+            <InputSelect id="state" @bind-Value="stateFilter" class="form-control">
+                <option value="">-- All States --</option>
+                @foreach (var state in Enum.GetValues<EnumList.StateList>())
+                {
+                    <option value="@state">@state.GetDisplayName()</option>
+                }
+            </InputSelect>
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="fsi => fsi.StateId" /> @*Add filter for StateID *@
+    <PropertyColumn Property="fsi => fsi.StateGroup" Sortable="true" Title="State Group">
+        <ColumnOptions>
+            <input type="search" @bind="stateGroupFilter" @bind:event="onchange" placeholder="Search Groups..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="fsi => fsi.StateGroupOverride" Sortable="true" Title="State Group Override">
+        <ColumnOptions>
+            <input type="search" @bind="stateGroupOverrideFilter" @bind:event="onchange" placeholder="Search Groups..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    @* <PropertyColumn Property="fsi => fsi.Zipcode" />
+    <PropertyColumn Property="fsi => fsi.Zipcode2" />
+    <PropertyColumn Property="fsi => fsi.Region" />
+    <PropertyColumn Property="fsi => fsi.Country" />
+    <PropertyColumn Property="fsi => fsi.AddressDt" />
+    <PropertyColumn Property="fsi => fsi.Phone" />
+    <PropertyColumn Property="fsi => fsi.PhoneDt" />
+    <PropertyColumn Property="fsi => fsi.Email" />
+    <PropertyColumn Property="fsi => fsi.EmailDt" />
+    <PropertyColumn Property="fsi => fsi.Fax" />
+    <PropertyColumn Property="fsi => fsi.FaxDt" />
+    <PropertyColumn Property="fsi => fsi.ContactName" />
+    <PropertyColumn Property="fsi => fsi.ContactRank" />
+    <PropertyColumn Property="fsi => fsi.ContactRankId" />
+    <PropertyColumn Property="fsi => fsi.ContactDt" />
+    <PropertyColumn Property="fsi => fsi.RecordType" />
+    <PropertyColumn Property="fsi => fsi.RecordTypeId" /> *@
+    <PropertyColumn Property="fsi => fsi.RecordStatus" Sortable="true" Title="Record Status">
+        <ColumnOptions>
+            <InputSelect id="status" @bind-Value="statusFilter" class="form-control">
+                <option value="">-- All --</option>
+                @foreach (var status in Enum.GetValues<EnumList.Status>())
+                {
+                    <option value="@status">@status.GetDisplayName()</option>
+                }
+            </InputSelect>
+        </ColumnOptions>
+    </PropertyColumn>
+    @* <PropertyColumn Property="fsi => fsi.CrossRefId" />
+    <PropertyColumn Property="fsi => fsi.SmSa" />
+    <PropertyColumn Property="fsi => fsi.DataSource" />
+    <PropertyColumn Property="fsi => fsi.SquareMiles" />
+    <PropertyColumn Property="fsi => fsi.Community" />
+    <PropertyColumn Property="fsi => fsi.CommunityId" />
+    <PropertyColumn Property="fsi => fsi.Population" />
+    <PropertyColumn Property="fsi => fsi.PopInterval" />
+    <PropertyColumn Property="fsi => fsi.PopIntervalId" />
+    <PropertyColumn Property="fsi => fsi.TypeEmps" />
+    <PropertyColumn Property="fsi => fsi.TypeEmpsId" />
+    <PropertyColumn Property="fsi => fsi.PaidEmps" />
+    <PropertyColumn Property="fsi => fsi.PaidEmpsWomen" />
+    <PropertyColumn Property="fsi => fsi.WorkWeek" />
+    <PropertyColumn Property="fsi => fsi.EmpsPerShift" />
+    <PropertyColumn Property="fsi => fsi.VolsComp" />
+    <PropertyColumn Property="fsi => fsi.Vols" />
+    <PropertyColumn Property="fsi => fsi.VolsWomen" />
+    <PropertyColumn Property="fsi => fsi.Pumpers" />
+    <PropertyColumn Property="fsi => fsi.Ladders" />
+    <PropertyColumn Property="fsi => fsi.Combo" />
+    <PropertyColumn Property="fsi => fsi.MarineVessels" />
+    <PropertyColumn Property="fsi => fsi.OtherSupport" />
+    <PropertyColumn Property="fsi => fsi.OtherVehicles" />
+    <PropertyColumn Property="fsi => fsi.ThermalEquipment" />
+    <PropertyColumn Property="fsi => fsi.Stations" />
+    <PropertyColumn Property="fsi => fsi.Ems" />
+    <PropertyColumn Property="fsi => fsi.EmsId" />
+    <PropertyColumn Property="fsi => fsi.Ambulance" />
+    <PropertyColumn Property="fsi => fsi.Dispatch" />
+    <PropertyColumn Property="fsi => fsi.DispatchId" />
+    <PropertyColumn Property="fsi => fsi.Training" />
+    <PropertyColumn Property="fsi => fsi.TrainingId" />
+    <PropertyColumn Property="fsi => fsi.CodeEnforcement" />
+    <PropertyColumn Property="fsi => fsi.CodeEnforcementId" />
+    <PropertyColumn Property="fsi => fsi.LastReturned" />
+    <PropertyColumn Property="fsi => fsi.LastSent" />
+    <PropertyColumn Property="fsi => fsi.Notes" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyStatus1" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyStatus2" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyStatus3" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyStatus4" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyStatus5" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyStatus6" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyStatus7" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyYears1" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyYears2" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyYears3" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyYears4" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyYears5" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyYears6" />
+    <PropertyColumn Property="fsi => fsi.FdSurveyYears7" /> *@
+    <PropertyColumn Property="fsi => fsi.CreatedDt" Sortable="true" Title="Created On" />
+    <PropertyColumn Property="fsi => fsi.UpdatedDt" Sortable="true" Title="Last Updated" />
+
+    <TemplateColumn Context="fsi">
+        <AuthorizeView Roles="Admin, Owner">
+            <a class="ru-link" href="@($"fsis/edit?nfpafdid={fsi.NfpaFdid}")">Edit</a>
+        </AuthorizeView>
+        <a class="ru-link" href="@($"fsis/details?nfpafdid={fsi.NfpaFdid}")">Details</a>
+        <AuthorizeView Roles="Admin, Owner">
+            <a class="delete-link" href="@($"fsis/delete?nfpafdid={fsi.NfpaFdid}")">Delete</a>
+        </AuthorizeView>
+    </TemplateColumn>
+</QuickGrid>
+
+<Paginator State="pagination" />
+
+@code {
+
+    // bool showStateGroup = false;
+    // bool showRegion = false;
+    // bool showCountry = false;
+    // bool showPhone = false;
+    // bool showEmail = false;
+
+    string? fsiFilter;
+    string? nfirsFilter;
+    string? departmentFilter;
+    string? cityFilter;
+    string? stateFilter;
+    string? statusFilter;
+    string? stateGroupFilter;
+    string? stateGroupOverrideFilter;
+
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+
+    IQueryable<FSI> DepartmentsQueryable
+    {
+        get
+        {
+            var dbContext = DbFactory.CreateDbContext();
+            var result = dbContext.FSI.AsQueryable();
+            if (!string.IsNullOrEmpty(fsiFilter))
+            {
+                result = result.Where(r => r.NfpaFdid == int.Parse(fsiFilter));
+            }
+
+            if (!string.IsNullOrEmpty(nfirsFilter))
+            {
+                result = result.Where(r => r.NfirsId == (nfirsFilter));
+            }
+
+            if (!string.IsNullOrEmpty(departmentFilter))
+            {
+                string filterLower = departmentFilter.ToLowerInvariant();
+                result = result.Where(r => (r.FdName ?? string.Empty).Contains(filterLower));
+                // result = result.Where(r => r.FdName == (departmentFilter));
+            }
+
+            if (!string.IsNullOrEmpty(cityFilter))
+            {
+                string filterLower = cityFilter.ToLowerInvariant();
+                result = result.Where(r => (r.City ?? string.Empty).Contains(filterLower));
+                // result = result.Where(r => r.City == (cityFilter));
+            }
+
+            if (!string.IsNullOrEmpty(stateFilter))
+            {
+                if (Enum.TryParse(stateFilter, true, out EnumList.StateList stateEnum))
+                {
+                    // If the parsing is successful, filter the query by the enum value.
+                    result = result.Where(r => r.State == stateEnum);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(statusFilter))
+            {
+                if (Enum.TryParse(statusFilter, true, out EnumList.Status statusEnum))
+                {
+                    // If the parsing is successful, filter the query by the enum value.
+                    result = result.Where(r => r.RecordStatus == statusEnum);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(stateGroupFilter))
+            {
+
+                result = result.Where(r => r.StateGroup == int.Parse(stateGroupFilter));
+            }
+
+            if (!string.IsNullOrEmpty(stateGroupOverrideFilter))
+            {
+
+                result = result.Where(r => r.StateGroupOverride == int.Parse(stateGroupOverrideFilter));
+            }
+
+            return result;
+        }
+    }
+}

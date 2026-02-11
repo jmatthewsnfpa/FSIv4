@@ -1,0 +1,130 @@
+﻿@page "/protectedtowns/create"
+@using FSIv4.Data
+@using FSIv4.Data.Helpers
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FSIv4.Data.Models
+@using System.Collections.Generic
+@using System.Reflection
+@using static FSIv4.Data.Models.EnumList
+@inject IDbContextFactory<FSIv4.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin, Owner")]
+
+<PageTitle>Create</PageTitle>
+
+<h1>New Town</h1>
+
+<br />
+
+<p>
+    <a class="btn btn-dark" href="/protectedtowns">Back to List</a>
+</p>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="ProtectedTowns" OnValidSubmit="AddProtectedTowns" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="mb-3">
+                <label for="townprotectedname" class="form-label text-danger">Protected Town Name:</label>
+                <InputText id="townprotectedname" @bind-Value="ProtectedTowns.TownProtectedName" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => ProtectedTowns.TownProtectedName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="nfpafdid" class="form-label text-danger">NFPA FDID:</label>
+                <InputNumber id="nfpafdid" @bind-Value="ProtectedTowns.NfpaFdid" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => ProtectedTowns.NfpaFdid" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdname" class="form-label text-danger">Department Name:</label>
+                <InputText id="fdname" @bind-Value="ProtectedTowns.FdName" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => ProtectedTowns.FdName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="city" class="form-label">City:</label>
+                <InputText id="city" @bind-Value="ProtectedTowns.City" class="form-control" />
+                <ValidationMessage For="() => ProtectedTowns.City" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="state" class="form-label text-danger">State:</label>
+                <InputSelect id="state" @bind-Value="ProtectedTowns.State" class="form-control">
+                    @foreach (var state in Enum.GetValues<EnumList.StateList>())
+                    {
+                        <option value="@state">@state.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => ProtectedTowns.State" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="stateid" class="form-label">State ID:</label>
+                <InputNumber id="stateid" @bind-Value="ProtectedTowns.StateId" class="form-control" readoly />
+                <ValidationMessage For="() => ProtectedTowns.StateId" class="text-danger" />
+            </div> *@
+            @* <div class="mb-3">
+                <label for="stategroup" class="form-label">State Group:</label>
+                <InputNumber id="stategroup" @bind-Value="ProtectedTowns.StateGroup" class="form-control" readonly />
+                <ValidationMessage For="() => ProtectedTowns.StateGroup" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="stategroupoverride" class="form-label">State Group Override:</label>
+                <InputNumber id="stategroupoverride" @bind-Value="ProtectedTowns.StateGroupOverride" class="form-control" />
+                <ValidationMessage For="() => ProtectedTowns.StateGroupOverride" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="createddt" class="form-label text-danger">Created Date:</label>
+                <InputDate id="createddt" @bind-Value="ProtectedTowns.CreatedDt" class="form-control" aria-required="true" readonly />
+                <ValidationMessage For="() => ProtectedTowns.CreatedDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="updateddt" class="form-label text-danger">Updated Date:</label>
+                <InputDate id="updateddt" @bind-Value="ProtectedTowns.UpdatedDt" class="form-control" aria-required="true" readonly />
+                <ValidationMessage For="() => ProtectedTowns.UpdatedDt" class="text-danger" />
+            </div>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a class="btn btn-dark mt-3" href="/protectedtowns">Back to List</a>
+</div>
+
+<br />
+<br />
+
+@code {
+
+    [SupplyParameterFromForm]
+    public ProtectedTowns ProtectedTowns { get; set; } = new();
+
+    [Inject]
+    public ApplicationDbContext Db { get; set; } = default!;
+
+    private async Task AddProtectedTowns()
+    {
+
+        // Set the integer ID properties based on the selected enum values. Call method for each enum property.
+        UpdateStateData(ProtectedTowns.State);
+
+        Db.Add(ProtectedTowns);
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo("protectedtowns");
+    }
+
+    private void UpdateStateData(EnumList.StateList stateValue)
+    {
+        if (EnumMaps.StateMap.TryGetValue(stateValue, out int stateId))
+        {
+            ProtectedTowns.StateId = stateId;
+        }
+
+        if (EnumMaps.StateGroupData.TryGetValue(stateValue, out int stateGroup))
+        {
+            ProtectedTowns.StateGroup = stateGroup;
+        }
+    }
+
+}

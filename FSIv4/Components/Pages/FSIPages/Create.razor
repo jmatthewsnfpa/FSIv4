@@ -1,0 +1,663 @@
+﻿@page "/fsis/create"
+@using FSIv4.Data
+@using FSIv4.Data.Helpers
+@using Microsoft.EntityFrameworkCore
+@using FSIv4.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using System.Collections.Generic
+@using System.Reflection
+@using static FSIv4.Data.Helpers.EnumExtensions
+@using static FSIv4.Data.Models.EnumList
+@using static FSIv4.Data.Models.EnumMaps
+@inject IDbContextFactory<FSIv4.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin, Owner")]
+
+<PageTitle>Create</PageTitle>
+
+<h1>New Department</h1>
+
+<br />
+
+<a class="btn btn-dark" href="@($"/fsis")">Back to List</a>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="FSI" OnValidSubmit="AddFSI" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="mb-3">
+                <label for="nfirsid" class="form-label">NFIRS ID:</label>
+                <InputText id="nfirsid" @bind-Value="FSI.NfirsId" class="form-control" />
+                <ValidationMessage For="() => FSI.NfirsId" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdname" class="form-label text-danger">Department Name:</label>
+                <InputText id="fdname" @bind-Value="FSI.FdName" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => FSI.FdName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="createddt" class="form-label text-primary">Created Date:</label>
+                <InputDate id="createddt" @bind-Value="FSI.CreatedDt" class="form-control" aria-required="true" readonly />
+                <ValidationMessage For="() => FSI.CreatedDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="updateddt" class="form-label text-primary">Updated Date:</label>
+                <InputDate id="updateddt" @bind-Value="FSI.UpdatedDt" class="form-control" aria-required="true" readonly />
+                <ValidationMessage For="() => FSI.UpdatedDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="street" class="form-label">Street:</label>
+                <InputText id="street" @bind-Value="FSI.Street" class="form-control" />
+                <ValidationMessage For="() => FSI.Street" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="street2" class="form-label">Street 2:</label>
+                <InputText id="street2" @bind-Value="FSI.Street2" class="form-control" />
+                <ValidationMessage For="() => FSI.Street2" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="city" class="form-label">City:</label>
+                <InputText id="city" @bind-Value="FSI.City" class="form-control" />
+                <ValidationMessage For="() => FSI.City" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="countyno" class="form-label">County Number:</label>
+                <InputNumber id="countyno" @bind-Value="FSI.CountyNo" class="form-control" />
+                <ValidationMessage For="() => FSI.CountyNo" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="state" class="form-label text-danger">State:</label>
+                <InputSelect id="state" @bind-Value="FSI.State" class="form-control">
+                    @foreach (var state in Enum.GetValues<EnumList.StateList>())
+                    {
+                        <option value="@state">@state.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.State" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="stateid" class="form-label">State ID:</label>
+                <InputNumber id="stateid" @bind-Value="FSI.StateId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.StateId" class="text-danger" />
+            </div> *@
+            @* <div class="mb-3">
+                <label for="stategroup" class="form-label">State Group:</label>
+                <InputNumber id="stategroup" @bind-Value="FSI.StateGroup" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.StateGroup" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="stategroupoverride" class="form-label">State Group Override:</label>
+                <InputNumber id="stategroupoverride" @bind-Value="FSI.StateGroupOverride" class="form-control" />
+                <ValidationMessage For="() => FSI.StateGroupOverride" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="zipcode" class="form-label">Zipcode:</label>
+                <InputText id="zipcode" @bind-Value="FSI.Zipcode" class="form-control" />
+                <ValidationMessage For="() => FSI.Zipcode" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="zipcode2" class="form-label">Zipcode 2:</label>
+                <InputText id="zipcode2" @bind-Value="FSI.Zipcode2" class="form-control" />
+                <ValidationMessage For="() => FSI.Zipcode2" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="region" class="form-label text-danger">Region:</label>
+                <InputSelect id="region" @bind-Value="FSI.Region" class="form-control req">
+                    <option value="">-- Select Region --</option>
+                    @foreach (var region in Enum.GetValues<EnumList.Region>())
+                    {
+                        <option value="@region">@region.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Region" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="country" class="form-label text-danger">Country:</label>
+                <InputSelect id="country" @bind-Value="FSI.Country" class="form-control req">
+                    <option value="">-- Select Country --</option>
+                    @foreach (var country in Enum.GetValues<EnumList.Country>())
+                    {
+                        <option value="@country">@country.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Country" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="addressdt" class="form-label text-danger">Address Date:</label>
+                <InputDate id="addressdt" @bind-Value="FSI.AddressDt" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => FSI.AddressDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone:</label>
+                <InputText id="phone" @bind-Value="FSI.Phone" class="form-control" />
+                <ValidationMessage For="() => FSI.Phone" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="phonedt" class="form-label text-danger">Phone Date:</label>
+                <InputDate id="phonedt" @bind-Value="FSI.PhoneDt" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => FSI.PhoneDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <InputText id="email" @bind-Value="FSI.Email" class="form-control" />
+                <ValidationMessage For="() => FSI.Email" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="emaildt" class="form-label text-danger">Email Date:</label>
+                <InputDate id="emaildt" @bind-Value="FSI.EmailDt" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => FSI.EmailDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fax" class="form-label">Fax:</label>
+                <InputText id="fax" @bind-Value="FSI.Fax" class="form-control" />
+                <ValidationMessage For="() => FSI.Fax" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="faxdt" class="form-label text-danger">Fax Date:</label>
+                <InputDate id="faxdt" @bind-Value="FSI.FaxDt" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => FSI.FaxDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="contactname" class="form-label">Contact Name:</label>
+                <InputText id="contactname" @bind-Value="FSI.ContactName" class="form-control" />
+                <ValidationMessage For="() => FSI.ContactName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="contactrank" class="form-label text-danger">Contact Rank:</label>
+                <InputSelect id="contactrank" @bind-Value="FSI.ContactRank" class="form-control req">
+                    <option value="">-- Select Rank --</option>
+                    @foreach (var rankValue in Enum.GetValues<EnumList.Rank>())
+                    {
+                        <option value="@rankValue">@rankValue.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.ContactRank" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="contactrankid" class="form-label">Contact Rank ID:</label>
+                <InputNumber id="contactrankid" @bind-Value="FSI.ContactRankId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.ContactRankId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="contactdt" class="form-label text-danger">Contact Date:</label>
+                <InputDate id="contactdt" @bind-Value="FSI.ContactDt" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => FSI.ContactDt" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="recordtype" class="form-label text-danger">Record Type:</label>
+                <InputSelect id="recordtype" @bind-Value="FSI.RecordType" class="form-control req">
+                    <option value="">-- Select Rank --</option>
+                    @foreach (var recordtypeValue in Enum.GetValues<EnumList.RecordType>())
+                    {
+                        <option value="@recordtypeValue">@recordtypeValue.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.ContactRank" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="recordtypeid" class="form-label">Record Type ID:</label>
+                <InputNumber id="recordtypeid" @bind-Value="FSI.RecordTypeId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.RecordTypeId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="recordstatus" class="form-label text-danger">Record Status:</label>
+                <InputSelect id="recordstatus" @bind-Value="FSI.RecordStatus" class="form-control req">
+                    <option value="">-- Select Status --</option>
+                    @foreach (var recordstatus in Enum.GetValues<EnumList.Status>())
+                    {
+                        <option value="@recordstatus">@recordstatus</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.RecordStatus" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="crossrefid" class="form-label">Cross Reference ID:</label>
+                <InputNumber id="crossrefid" @bind-Value="FSI.CrossRefId" class="form-control" />
+                <ValidationMessage For="() => FSI.CrossRefId" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="smsa" class="form-label">SM SA:</label>
+                <InputNumber id="smsa" @bind-Value="FSI.SmSa" class="form-control" />
+                <ValidationMessage For="() => FSI.SmSa" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="datasource" class="form-label">Data Source:</label>
+                <InputText id="datasource" @bind-Value="FSI.DataSource" class="form-control" />
+                <ValidationMessage For="() => FSI.DataSource" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="squaremiles" class="form-label">Square Miles:</label>
+                <InputNumber id="squaremiles" @bind-Value="FSI.SquareMiles" class="form-control" />
+                <ValidationMessage For="() => FSI.SquareMiles" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="community" class="form-label text-danger">Community:</label>
+                <InputSelect id="community" @bind-Value="FSI.Community" class="form-control req">
+                    <option value="">-- Select Community --</option>
+                    @foreach (var community in Enum.GetValues<EnumList.Community>())
+                    {
+                        <option value="@community">@community.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Community" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="communityid" class="form-label">Community ID:</label>
+                <InputNumber id="communityid" @bind-Value="FSI.CommunityId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.CommunityId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="population" class="form-label">Population:</label>
+                <InputNumber id="population" @bind-Value="FSI.Population" class="form-control" />
+                <ValidationMessage For="() => FSI.Population" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="popinterval" class="form-label text-danger">Population Interval:</label>
+                <InputSelect id="popinterval" @bind-Value="FSI.PopInterval" class="form-control req">
+                    <option value="">-- Select Interval --</option>
+                    @foreach (var popinterval in Enum.GetValues<EnumList.PopInt>())
+                    {
+                        <option value="@popinterval">@popinterval.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.PopInterval" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="popintervalid" class="form-label">Population Interval ID:</label>
+                <InputNumber id="popintervalid" @bind-Value="FSI.PopIntervalId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.PopIntervalId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="typeemps" class="form-label text-danger">Employee Type:</label>
+                <InputSelect id="typeemps" @bind-Value="FSI.TypeEmps" class="form-control req">
+                    <option value="">-- Select Type --</option>
+                    @foreach (var typeemps in Enum.GetValues<EnumList.EmployeeType>())
+                    {
+                        <option value="@typeemps">@typeemps.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.TypeEmps" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="typeempsid" class="form-label">Employee Type ID:</label>
+                <InputNumber id="typeempsid" @bind-Value="FSI.TypeEmpsId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.TypeEmpsId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="paidemps" class="form-label">Paid Employees:</label>
+                <InputNumber id="paidemps" @bind-Value="FSI.PaidEmps" class="form-control" />
+                <ValidationMessage For="() => FSI.PaidEmps" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="paidempswomen" class="form-label">Paid Employees Women:</label>
+                <InputNumber id="paidempswomen" @bind-Value="FSI.PaidEmpsWomen" class="form-control" />
+                <ValidationMessage For="() => FSI.PaidEmpsWomen" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="workweek" class="form-label">Work Week:</label>
+                <InputNumber id="workweek" @bind-Value="FSI.WorkWeek" class="form-control" />
+                <ValidationMessage For="() => FSI.WorkWeek" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="empspershift" class="form-label">Employees Per Shift:</label>
+                <InputNumber id="empspershift" @bind-Value="FSI.EmpsPerShift" class="form-control" />
+                <ValidationMessage For="() => FSI.EmpsPerShift" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="volscomp" class="form-label text-danger">Volunteer Compensation:</label>
+                <InputSelect id="volsComp" @bind-Value="FSI.VolsComp" class="form-control req">
+                    <option value="">-- Select Volunteer Compensation --</option>
+                    @foreach (var volscompValue in Enum.GetValues<EnumList.VolunteersCompensation>())
+                    {
+                        <option value="@volscompValue">@volscompValue</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.VolsComp" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="ambulance" class="form-label text-danger">Ambulance:</label>
+                <InputSelect id="ambulance" @bind-Value="FSI.Ambulance" class="form-control req">
+                    <option value="">-- Select Ambulance --</option>
+                    @foreach (var ambulance in Enum.GetValues<EnumList.Ambulance>())
+                    {
+                        <option value="@ambulance">@ambulance.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Ambulance" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="vols" class="form-label">Volunteers:</label>
+                <InputNumber id="vols" @bind-Value="FSI.Vols" class="form-control" />
+                <ValidationMessage For="() => FSI.Vols" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="volswomen" class="form-label">Volunteers Women:</label>
+                <InputNumber id="volswomen" @bind-Value="FSI.VolsWomen" class="form-control" />
+                <ValidationMessage For="() => FSI.VolsWomen" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="pumpers" class="form-label">Pumpers:</label>
+                <InputNumber id="pumpers" @bind-Value="FSI.Pumpers" class="form-control" />
+                <ValidationMessage For="() => FSI.Pumpers" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="ladders" class="form-label">Ladders:</label>
+                <InputNumber id="ladders" @bind-Value="FSI.Ladders" class="form-control" />
+                <ValidationMessage For="() => FSI.Ladders" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="combo" class="form-label">Combo:</label>
+                <InputNumber id="combo" @bind-Value="FSI.Combo" class="form-control" />
+                <ValidationMessage For="() => FSI.Combo" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="marinevessels" class="form-label">Marine Vessels:</label>
+                <InputNumber id="marinevessels" @bind-Value="FSI.MarineVessels" class="form-control" />
+                <ValidationMessage For="() => FSI.MarineVessels" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="othersupport" class="form-label">Other Support:</label>
+                <InputNumber id="othersupport" @bind-Value="FSI.OtherSupport" class="form-control" />
+                <ValidationMessage For="() => FSI.OtherSupport" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="othervehicles" class="form-label">Other Vehicles:</label>
+                <InputNumber id="othervehicles" @bind-Value="FSI.OtherVehicles" class="form-control" />
+                <ValidationMessage For="() => FSI.OtherVehicles" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="thermalequipment" class="form-label">Thermal Equipment:</label>
+                <InputNumber id="thermalequipment" @bind-Value="FSI.ThermalEquipment" class="form-control" />
+                <ValidationMessage For="() => FSI.ThermalEquipment" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="stations" class="form-label">Stations:</label>
+                <InputNumber id="stations" @bind-Value="FSI.Stations" class="form-control" />
+                <ValidationMessage For="() => FSI.Stations" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="ems" class="form-label text-danger">EMS:</label>
+                <InputSelect id="ems" @bind-Value="FSI.Ems" class="form-control req">
+                    <option value="">-- Select EMS --</option>
+                    @foreach (var ems in Enum.GetValues<EnumList.Ems>())
+                    {
+                        <option value="@ems">@ems.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Ems" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="emsid" class="form-label">EMS ID:</label>
+                <InputNumber id="emsid" @bind-Value="FSI.EmsId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.EmsId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="ambulance" class="form-label text-danger">Ambulance:</label>
+                <InputSelect id="ambulance" @bind-Value="FSI.Ambulance" class="form-control req">
+                    <option value="">-- Select Ambulance --</option>
+                    @foreach (var ambulance in Enum.GetValues<EnumList.Ambulance>())
+                    {
+                        <option value="@ambulance">@ambulance.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Ambulance" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="dispatch" class="form-label text-danger">Dispatch:</label>
+                <InputSelect id="dispatch" @bind-Value="FSI.Dispatch" class="form-control req">
+                    <option value="">-- Select Dispatch --</option>
+                    @foreach (var dispatch in Enum.GetValues<EnumList.Dispatch>())
+                    {
+                        <option value="@dispatch">@dispatch.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Dispatch" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="dispatchid" class="form-label">Dispatch ID:</label>
+                <InputNumber id="dispatchid" @bind-Value="FSI.DispatchId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.DispatchId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="training" class="form-label text-danger">Training:</label>
+                <InputSelect id="training" @bind-Value="FSI.Training" class="form-control req">
+                    <option value="">-- Select Training --</option>
+                    @foreach (var training in Enum.GetValues<EnumList.Training>())
+                    {
+                        <option value="@training">@training.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.Training" class="text-danger" />
+            </div>
+            @*  <div class="mb-3">
+                <label for="trainingid" class="form-label">Training ID:</label>
+                <InputNumber id="trainingid" @bind-Value="FSI.TrainingId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.TrainingId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="codeenforcement" class="form-label text-danger">Code Enforcement:</label>
+                <InputSelect id="codeenforcement" @bind-Value="FSI.CodeEnforcement" class="form-control req">
+                    <option value="">-- Select Code Enforcement --</option>
+                    @foreach (var codeenforcement in Enum.GetValues<EnumList.CodeEnforcement>())
+                    {
+                        <option value="@codeenforcement">@codeenforcement.GetDisplayName()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => FSI.CodeEnforcement" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="codeenforcementid" class="form-label">Code Enforcement ID:</label>
+                <InputNumber id="codeenforcementid" @bind-Value="FSI.CodeEnforcementId" class="form-control" readonly />
+                <ValidationMessage For="() => FSI.CodeEnforcementId" class="text-danger" />
+            </div> *@
+            <div class="mb-3">
+                <label for="lastreturned" class="form-label">Last Returned:</label>
+                <InputNumber id="lastreturned" @bind-Value="FSI.LastReturned" class="form-control" />
+                <ValidationMessage For="() => FSI.LastReturned" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="lastsent" class="form-label">Last Sent:</label>
+                <InputNumber id="lastsent" @bind-Value="FSI.LastSent" class="form-control" />
+                <ValidationMessage For="() => FSI.LastSent" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="notes" class="form-label">Notes:</label>
+                <InputTextArea id="notes" @bind-Value="FSI.Notes" class="form-control" />
+                <ValidationMessage For="() => FSI.Notes" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveystatus1" class="form-label">Fd Survey Status 1:</label>
+                <InputNumber id="fdsurveystatus1" @bind-Value="FSI.FdSurveyStatus1" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyStatus1" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveystatus2" class="form-label">Fd Survey Status 2:</label>
+                <InputNumber id="fdsurveystatus2" @bind-Value="FSI.FdSurveyStatus2" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyStatus2" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveystatus3" class="form-label">Fd Survey Status 3:</label>
+                <InputNumber id="fdsurveystatus3" @bind-Value="FSI.FdSurveyStatus3" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyStatus3" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveystatus4" class="form-label">Fd Survey Status 4:</label>
+                <InputNumber id="fdsurveystatus4" @bind-Value="FSI.FdSurveyStatus4" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyStatus4" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveystatus5" class="form-label">Fd Survey Status 5:</label>
+                <InputNumber id="fdsurveystatus5" @bind-Value="FSI.FdSurveyStatus5" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyStatus5" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveystatus6" class="form-label">Fd Survey Status 6:</label>
+                <InputNumber id="fdsurveystatus6" @bind-Value="FSI.FdSurveyStatus6" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyStatus6" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveystatus7" class="form-label">Fd Survey Status 7:</label>
+                <InputNumber id="fdsurveystatus7" @bind-Value="FSI.FdSurveyStatus7" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyStatus7" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveyyears1" class="form-label">Fd Survey Years 1:</label>
+                <InputNumber id="fdsurveyyears1" @bind-Value="FSI.FdSurveyYears1" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyYears1" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveyyears2" class="form-label">Fd Survey Years 2:</label>
+                <InputNumber id="fdsurveyyears2" @bind-Value="FSI.FdSurveyYears2" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyYears2" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveyyears3" class="form-label">Fd Survey Years 3:</label>
+                <InputNumber id="fdsurveyyears3" @bind-Value="FSI.FdSurveyYears3" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyYears3" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveyyears4" class="form-label">Fd Survey Years 4:</label>
+                <InputNumber id="fdsurveyyears4" @bind-Value="FSI.FdSurveyYears4" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyYears4" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveyyears5" class="form-label">Fd Survey Years 5:</label>
+                <InputNumber id="fdsurveyyears5" @bind-Value="FSI.FdSurveyYears5" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyYears5" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveyyears6" class="form-label">Fd Survey Years 6:</label>
+                <InputNumber id="fdsurveyyears6" @bind-Value="FSI.FdSurveyYears6" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyYears6" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="fdsurveyyears7" class="form-label">Fd Survey Years 7:</label>
+                <InputNumber id="fdsurveyyears7" @bind-Value="FSI.FdSurveyYears7" class="form-control" />
+                <ValidationMessage For="() => FSI.FdSurveyYears7" class="text-danger" />
+            </div>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a class="btn btn-dark mt-3" href="/fsis">Back to List</a>
+</div>
+
+<br />
+
+
+@code {
+    [SupplyParameterFromForm]
+    public FSI FSI { get; set; } = new();
+
+    [Inject]
+    public ApplicationDbContext Db { get; set; } = default!;
+
+    private async Task AddFSI()
+    {
+        // Set the integer ID properties based on the selected enum values. Call method for each enum property.
+        UpdateStateData(FSI.State);
+        UpdateContactRankId(FSI.ContactRank);
+        UpdateCommunityId(FSI.Community);
+        UpdatePopIntervalId(FSI.PopInterval);
+        UpdateTypeEmpsId(FSI.TypeEmps);
+        UpdateEmsId(FSI.Ems);
+        UpdateDispatchId(FSI.Dispatch);
+        UpdateTrainingId(FSI.Training);
+        UpdateCodeEnforcementId(FSI.CodeEnforcement);
+        UpdateRecordTypeId(FSI.RecordType);
+
+
+        Db.Add(FSI);
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo("fsis");
+    }
+
+    private void UpdateStateData(EnumList.StateList stateValue)
+    {
+        if (EnumMaps.StateMap.TryGetValue(stateValue, out int stateId))
+        {
+            FSI.StateId = stateId;
+        }
+
+        if (EnumMaps.StateGroupData.TryGetValue(stateValue, out int stateGroup))
+        {
+            FSI.StateGroup = stateGroup;
+        }
+    }
+
+    private void UpdateContactRankId(EnumList.Rank rankValue)
+    {
+        if (EnumMaps.RankMap.TryGetValue(rankValue, out int rankId))
+        {
+            FSI.ContactRankId = rankId;
+        }
+    }
+
+    private void UpdateCommunityId(EnumList.Community communityValue)
+    {
+        if (EnumMaps.CommunityMap.TryGetValue(communityValue, out int communityId))
+        {
+            FSI.CommunityId = communityId;
+        }
+    }
+
+    private void UpdatePopIntervalId(EnumList.PopInt popintValue)
+    {
+        if (EnumMaps.PopIntMap.TryGetValue(popintValue, out int popintId))
+        {
+            FSI.PopIntervalId = popintId;
+        }
+    }
+
+    private void UpdateTypeEmpsId(EnumList.EmployeeType typeempsValue)
+    {
+        if (EnumMaps.TypeEmpMap.TryGetValue(typeempsValue, out int typeempsId))
+        {
+            FSI.TypeEmpsId = typeempsId;
+        }
+    }
+
+    private void UpdateEmsId(EnumList.Ems emsValue)
+    {
+        if (EnumMaps.EmsMap.TryGetValue(emsValue, out int emsId))
+        {
+            FSI.EmsId = emsId;
+        }
+    }
+
+    private void UpdateDispatchId(EnumList.Dispatch dispatchValue)
+    {
+        if (EnumMaps.DispatchMap.TryGetValue(dispatchValue, out int dispatchId))
+        {
+            FSI.DispatchId = dispatchId;
+        }
+    }
+
+    private void UpdateTrainingId(EnumList.Training trainingValue)
+    {
+        if (EnumMaps.TrainingMap.TryGetValue(trainingValue, out int trainingId))
+        {
+            FSI.TrainingId = trainingId;
+        }
+    }
+
+    private void UpdateCodeEnforcementId(EnumList.CodeEnforcement codeenforcementValue)
+    {
+        if (EnumMaps.CodeEnforcementMap.TryGetValue(codeenforcementValue, out int codeenforcementId))
+        {
+            FSI.CodeEnforcementId = codeenforcementId;
+        }
+    }
+
+    private void UpdateRecordTypeId(EnumList.RecordType recordtypeValue)
+    {
+        if (EnumMaps.RecordTypeMap.TryGetValue(recordtypeValue, out int recordtypeId))
+        {
+            FSI.RecordTypeId = recordtypeId;
+        }
+    }
+}

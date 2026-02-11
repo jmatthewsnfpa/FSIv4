@@ -1,0 +1,80 @@
+﻿@page "/protectedtowns/details"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FSIv4.Data.Models
+@inject IDbContextFactory<FSIv4.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin, Owner, Reader")]
+
+<PageTitle>Details</PageTitle>
+
+<h1>Town Details</h1>
+
+<br />
+
+<p>
+    <a class="btn btn-dark" href="@($"/protectedtowns")">Back to List</a>
+</p>
+<div>
+
+    <hr />
+    @if (protectedtowns is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-2">Protected Town ID</dt>
+            <dd class="col-sm-10">@protectedtowns.TownProtectedId</dd>
+            <dt class="col-sm-2">Protected Town Name</dt>
+            <dd class="col-sm-10">@protectedtowns.TownProtectedName</dd>
+            <dt class="col-sm-2">NFPA FDID</dt>
+            <dd class="col-sm-10">@protectedtowns.NfpaFdid</dd>
+            <dt class="col-sm-2">Department Name</dt>
+            <dd class="col-sm-10">@protectedtowns.FdName</dd>
+            <dt class="col-sm-2">City</dt>
+            <dd class="col-sm-10">@protectedtowns.City</dd>
+            <dt class="col-sm-2">State</dt>
+            <dd class="col-sm-10">@protectedtowns.State</dd>
+            <dt class="col-sm-2">State ID</dt>
+            <dd class="col-sm-10">@protectedtowns.StateId</dd>
+            <dt class="col-sm-2">State Group</dt>
+            <dd class="col-sm-10">@protectedtowns.StateGroup</dd>
+            <dt class="col-sm-2">State Group Override</dt>
+            <dd class="col-sm-10">@protectedtowns.StateGroupOverride</dd>
+            <dt class="col-sm-2">Created Date</dt>
+            <dd class="col-sm-10">@protectedtowns.CreatedDt</dd>
+            <dt class="col-sm-2">Updated Date</dt>
+            <dd class="col-sm-10">@protectedtowns.UpdatedDt</dd>
+        </dl>
+        <div>
+            <AuthorizeView Roles="Admin, Owner">
+                <a class="btn btn-primary" href="@($"/protectedtowns/edit?townprotectedid={protectedtowns.TownProtectedId}")">Edit</a>
+            </AuthorizeView>
+            <a class="btn btn-dark mx-3" href="@($"/protectedtowns")">Back to List</a>
+        </div>
+    }
+</div>
+
+<br />
+<br />
+
+@code {
+    private ProtectedTowns? protectedtowns;
+
+    [SupplyParameterFromQuery]
+    private int TownProtectedId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        protectedtowns = await context.ProtectedTowns.FirstOrDefaultAsync(m => m.TownProtectedId == TownProtectedId);
+
+        if (protectedtowns is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

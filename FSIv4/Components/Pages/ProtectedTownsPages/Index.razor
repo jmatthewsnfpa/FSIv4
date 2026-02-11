@@ -1,0 +1,151 @@
+﻿@page "/protectedtowns"
+@using FSIv4.Data.Helpers
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using FSIv4.Data.Models
+@using FSIv4.Data
+@inject IDbContextFactory<FSIv4.Data.ApplicationDbContext> DbFactory
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin, Owner, Reader")]
+
+<PageTitle>Index</PageTitle>
+
+<h1>Protected Towns</h1>
+<h5><i>Requires Valid FSI Record</i></h5>
+<br />
+
+<AuthorizeView Roles="Admin, Owner">
+    <p>
+        <a class="btn btn-primary" href="protectedtowns/create">Create New</a>
+    </p>
+</AuthorizeView>
+
+<div class="page-size-chooser">
+    Items per page:
+    <select @bind="@pagination.ItemsPerPage">
+        <option>5</option>
+        <option>10</option>
+        <option>20</option>
+        <option>50</option>
+        <option>100</option>
+    </select>
+</div>
+
+<br />
+
+<QuickGrid Class="table" Items="TownsQueryable" Pagination="pagination">
+    <PropertyColumn Property="protectedtowns => protectedtowns.TownProtectedId" Sortable="true" Title="Protected Town ID" />
+    <PropertyColumn Property="protectedtowns => protectedtowns.TownProtectedName" Sortable="true" Title="Protected Town">
+        <ColumnOptions>
+            <input type="search" @bind="townFilter" @bind:event="onchange" placeholder="Search Town Name..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="protectedtowns => protectedtowns.NfpaFdid" Sortable="true" Title="NFPA FDID">
+        <ColumnOptions>
+            <input type="search" @bind="fdidFilter" @bind:event="onchange" placeholder="Search NFPA FDID..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="ProtectedTowns => ProtectedTowns.FdName" Sortable="true" Title="Department Name">
+        <ColumnOptions>
+            <input type="search" @bind="departmentFilter" @bind:event="onchange" placeholder="Search Department Name..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="ProtectedTowns => ProtectedTowns.City" Sortable="true" Title="City">
+        <ColumnOptions>
+            <input type="search" @bind="cityFilter" @bind:event="onchange" placeholder="Search Cities..." />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="ProtectedTowns => ProtectedTowns.State" Sortable="true" Title="State">
+        <ColumnOptions>
+            <InputSelect id="state" @bind-Value="stateFilter" class="form-control">
+                <option value="">-- All States --</option>
+                @foreach (var state in Enum.GetValues<EnumList.StateList>())
+                {
+                    <option value="@state">@state.GetDisplayName()</option>
+                }
+            </InputSelect>
+        </ColumnOptions>
+    </PropertyColumn>
+    @* <PropertyColumn Property="ProtectedTowns => ProtectedTowns.StateGroup" Sortable="true" Title="State Group">
+        <ColumnOptions>
+            <input type="search" @bind="stateGroupFilter" @bind:event="onchange" placeholder="Search Groups..." />
+        </ColumnOptions>
+    </PropertyColumn> *@
+    @* <PropertyColumn Property="protectedtowns => protectedtowns.StateId" Sortable="true" Title="StateID" /> *@
+    <PropertyColumn Property="protectedtowns => protectedtowns.CreatedDt" Sortable="true" Title="Created On" />
+    <PropertyColumn Property="protectedtowns => protectedtowns.UpdatedDt" Sortable="true" Title="Last Updated" />
+
+    <TemplateColumn Context="protectedtowns">
+        <AuthorizeView Roles="Admin, Owner">
+            <a class="ru-link" href="@($"protectedtowns/edit?townprotectedid={protectedtowns.TownProtectedId}")">Edit</a>
+        </AuthorizeView>
+        <a class="ru-link" href="@($"protectedtowns/details?townprotectedid={protectedtowns.TownProtectedId}")">Details</a>
+        <AuthorizeView Roles="Admin, Owner">
+            <a class="delete-link" href="@($"protectedtowns/delete?townprotectedid={protectedtowns.TownProtectedId}")">Delete</a>
+        </AuthorizeView>
+    </TemplateColumn>
+</QuickGrid>
+
+<Paginator State="pagination" />
+
+@code {
+
+    string? fdidFilter;
+    string? departmentFilter;
+    string? cityFilter;
+    string? stateFilter;
+    // string? stateGroupFilter;
+    string? townFilter;
+
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+
+    IQueryable<ProtectedTowns> TownsQueryable
+    {
+        get
+        {
+            var dbContext = DbFactory.CreateDbContext();
+            var result = dbContext.ProtectedTowns.AsQueryable();
+            if (!string.IsNullOrEmpty(fdidFilter))
+            {
+
+                result = result.Where(r => r.NfpaFdid == int.Parse(fdidFilter));
+            }
+
+            if (!string.IsNullOrEmpty(townFilter))
+            {
+                result = result.Where(r => r.TownProtectedName == (townFilter));
+            }
+
+            if (!string.IsNullOrEmpty(departmentFilter))
+            {
+
+                result = result.Where(r => r.FdName == (departmentFilter));
+            }
+
+            if (!string.IsNullOrEmpty(cityFilter))
+            {
+
+                result = result.Where(r => r.City == (cityFilter));
+            }
+
+            if (!string.IsNullOrEmpty(stateFilter))
+            {
+                if (Enum.TryParse(stateFilter, true, out EnumList.StateList stateEnum))
+                {
+
+                    result = result.Where(r => r.State == stateEnum);
+                }
+            }
+
+            // if (!string.IsNullOrEmpty(stateGroupFilter))
+            // {
+
+            //     result = result.Where(r => r.StateGroup == int.Parse(stateGroupFilter));
+            // }
+
+            return result;
+        }
+
+    }
+}

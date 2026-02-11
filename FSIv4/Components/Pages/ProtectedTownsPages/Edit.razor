@@ -1,0 +1,167 @@
+﻿@page "/protectedtowns/edit"
+@using FSIv4.Data.Helpers
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FSIv4.Data.Models
+@using static FSIv4.Data.Models.EnumList
+@inject IDbContextFactory<FSIv4.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin, Owner")]
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit Town</h1>
+
+<br />
+
+<p>
+    <a class="btn btn-dark" href="@($"/protectedtowns")">Back to List</a>
+</p>
+<hr />
+@if (ProtectedTowns is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="ProtectedTowns" OnValidSubmit="UpdateProtectedTowns" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert" />
+                <input type="hidden" name="ProtectedTowns.TownProtectedId" value="@ProtectedTowns.TownProtectedId" />
+                <div class="mb-3">
+                    <label for="townprotectedname" class="form-label text-danger">Protected Town Name:</label>
+                    <InputText id="townprotectedname" @bind-Value="ProtectedTowns.TownProtectedName" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => ProtectedTowns.TownProtectedName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="nfpafdid" class="form-label text-danger">NFPA FDID:</label>
+                    <InputNumber id="nfpafdid" @bind-Value="ProtectedTowns.NfpaFdid" class="form-control" aria-required="true" readonly />
+                    <ValidationMessage For="() => ProtectedTowns.NfpaFdid" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="fdname" class="form-label text-danger">Department Name:</label>
+                    <InputText id="fdname" @bind-Value="ProtectedTowns.FdName" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => ProtectedTowns.FdName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="city" class="form-label">City:</label>
+                    <InputText id="city" @bind-Value="ProtectedTowns.City" class="form-control" />
+                    <ValidationMessage For="() => ProtectedTowns.City" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="state" class="form-label text-danger">State:</label>
+                    <InputSelect id="state" @bind-Value="ProtectedTowns.State" class="form-control">
+                        @foreach (var state in Enum.GetValues<EnumList.StateList>())
+                        {
+                            <option value="@state">@state.GetDisplayName()</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => ProtectedTowns.State" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="stateid" class="form-label">State ID:</label>
+                    <InputNumber id="stateid" @bind-Value="ProtectedTowns.StateId" class="form-control" readonly />
+                    <ValidationMessage For="() => ProtectedTowns.StateId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="stategroup" class="form-label">State Group:</label>
+                    <InputNumber id="stategroup" @bind-Value="ProtectedTowns.StateGroup" class="form-control" readonly />
+                    <ValidationMessage For="() => ProtectedTowns.StateGroup" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="stategroupoverride" class="form-label">State Group Override:</label>
+                    <InputNumber id="stategroupoverride" @bind-Value="ProtectedTowns.StateGroupOverride" class="form-control" />
+                    <ValidationMessage For="() => ProtectedTowns.StateGroupOverride" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="createddt" class="form-label text-danger">Created Date:</label>
+                    <InputDate id="createddt" @bind-Value="ProtectedTowns.CreatedDt" class="form-control" aria-required="true" readonly />
+                    <ValidationMessage For="() => ProtectedTowns.CreatedDt" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="updateddt" class="form-label text-danger">Updated Date:</label>
+                    <InputDate id="updateddt" @bind-Value="ProtectedTowns.UpdatedDt" class="form-control" aria-required="true" readonly />
+                    <ValidationMessage For="() => ProtectedTowns.UpdatedDt" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a class="btn btn-dark mt-3" href="/protectedtowns">Back to List</a>
+</div>
+
+<br />
+<br />
+
+@code {
+    [SupplyParameterFromQuery]
+    private int TownProtectedId { get; set; }
+
+    [SupplyParameterFromForm]
+    private ProtectedTowns? ProtectedTowns { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        ProtectedTowns ??= await context.ProtectedTowns.FirstOrDefaultAsync(m => m.TownProtectedId == TownProtectedId);
+
+        if (ProtectedTowns is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task UpdateProtectedTowns()
+    {
+        if (ProtectedTowns is null)
+        {
+            return;
+        }
+
+        UpdateStateId(ProtectedTowns.State);
+
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(ProtectedTowns).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ProtectedTownsExists(ProtectedTowns.TownProtectedId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/protectedtowns");
+    }
+
+    private bool ProtectedTownsExists(int TownProtectedId)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.ProtectedTowns.Any(e => e.TownProtectedId == TownProtectedId);
+    }
+
+    // The strongly typed methods from previous steps,
+    // which correctly handle nullable enums.
+
+    private void UpdateStateId(StateList? stateValue)
+    {
+        if (stateValue.HasValue && EnumMaps.StateMap.TryGetValue(stateValue.Value, out int stateId))
+        {
+            ProtectedTowns!.StateId = stateId;
+        }
+    }
+}
