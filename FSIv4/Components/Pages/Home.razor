@@ -92,7 +92,7 @@
         }
     </div>
 
-    <div class="panel">
+    @* <div class="panel">
         <h3 class="panel-header">Downloads</h3>
 
 
@@ -120,7 +120,7 @@
             <button class="btn btn-primary" @onclick="DownloadCsv">Download</button>
         }
 
-    </div>
+    </div> *@
 </div>
 
 @code {
@@ -129,7 +129,7 @@
     private bool IsLoading { get; set; } = true;
     private bool IsError { get; set; } = false;
     private string Message { get; set; } = string.Empty;
-    private string SelectedTable { get; set; } = "FSI"; // Default value
+    // private string SelectedTable { get; set; } = "FSI"; // Default value
     private int _totalFSIRecords;
     private int _totalTownsRecords;
     private int _updatedFSIRecordsInLastMonth;
@@ -229,307 +229,307 @@
         }
     }
 
-    private async Task DownloadCsv()
-    {
-        IsLoading = true;
-        IsError = false;
-        Message = string.Empty;
+//     private async Task DownloadCsv()
+//     {
+//         IsLoading = true;
+//         IsError = false;
+//         Message = string.Empty;
 
-        try
-        {
-            await using var context = await DbFactory.CreateDbContextAsync();
-            // string csvContent = string.Empty;
-            string filename = string.Empty;
-            Stream? stream = null;
+//         try
+//         {
+//             await using var context = await DbFactory.CreateDbContextAsync();
+//             // string csvContent = string.Empty;
+//             string filename = string.Empty;
+//             Stream? stream = null;
 
-            // Added the option to select which table to download
-            switch (SelectedTable)
-            {
-                case "FSI":
-                    stream = await GenerateFsiCsvStreamAsync(context);
-                    filename = "FSI_Data.csv";
-                    break;
-                case "ProtectedTowns":
-                    stream /* csvContent */ = await GenerateProtectedTownsCsvStreamAsync(context);
-                    filename = "ProtectedTowns_Data.csv";
-                    break;
-                default:
-                    Message = "Please select valid table.";
-                    IsLoading = false;
-                    return;
-            }
+//             // Added the option to select which table to download
+//             switch (SelectedTable)
+//             {
+//                 case "FSI":
+//                     stream = await GenerateFsiCsvStreamAsync(context);
+//                     filename = "FSI_Data.csv";
+//                     break;
+//                 case "ProtectedTowns":
+//                     stream /* csvContent */ = await GenerateProtectedTownsCsvStreamAsync(context);
+//                     filename = "ProtectedTowns_Data.csv";
+//                     break;
+//                 default:
+//                     Message = "Please select valid table.";
+//                     IsLoading = false;
+//                     return;
+//             }
 
-            // if (string.IsNullOrEmpty(csvContent))
-            if (stream == null || stream.Length == 0)
-            {
-                IsLoading = false;
-                return;
-            }
+//             // if (string.IsNullOrEmpty(csvContent))
+//             if (stream == null || stream.Length == 0)
+//             {
+//                 IsLoading = false;
+//                 return;
+//             }
 
-            using var streamRef = new DotNetStreamReference(stream);
+//             using var streamRef = new DotNetStreamReference(stream);
 
-            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
+//             await JSRuntime.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
 
-            // Call download.js, previously BlazorHelper.js
+//             // Call download.js, previously BlazorHelper.js
 
-        }
-        catch (Exception ex)
-        {
-            IsError = true;
-            Message = $"An error occurred during download: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
+//         }
+//         catch (Exception ex)
+//         {
+//             IsError = true;
+//             Message = $"An error occurred during download: {ex.Message}";
+//         }
+//         finally
+//         {
+//             IsLoading = false;
+//         }
+//     }
 
-    private async Task<Stream?> GenerateFsiCsvStreamAsync(ApplicationDbContext context)
-    {
-        // Fetch records and stream them directly
-        var fsisToDownload = context.FSI.AsNoTracking().AsAsyncEnumerable();
+//     private async Task<Stream?> GenerateFsiCsvStreamAsync(ApplicationDbContext context)
+//     {
+//         // Fetch records and stream them directly
+//         var fsisToDownload = context.FSI.AsNoTracking().AsAsyncEnumerable();
 
-        var memoryStream = new MemoryStream();
-        await using var writer = new StreamWriter(memoryStream, Encoding.UTF8, leaveOpen: true);
+//         var memoryStream = new MemoryStream();
+//         await using var writer = new StreamWriter(memoryStream, Encoding.UTF8, leaveOpen: true);
 
-        // Write UTF-8 BOM to help Excel recognize encoding
-        await writer.WriteAsync('\ufeff');
+//         // Write UTF-8 BOM to help Excel recognize encoding
+//         await writer.WriteAsync('\ufeff');
 
-        var hasAny = false;
-        var headersWritten = false;
+//         var hasAny = false;
+//         var headersWritten = false;
 
-        await foreach (var fsi in fsisToDownload)
-        {
-            if (!headersWritten)
-            {
-                // Write Headers with proper escaping
-                var headers = new List<string>
-                {
-                    "NfpaFdid", "NfirsId", "FdName", "CreatedDt", "UpdatedDt", "Street", "Street2", "City",
-                    "CountyNo", "State", "StateId", "StateGroup", "StateGroupOverride", "Zipcode", "Zipcode2",
-                    "Region", "Country", "AddressDt", "Phone", "PhoneDt", "Email", "EmailDt", "Fax", "FaxDt",
-                    "ContactName", "ContactRank", "ContactRankId", "ContactDt", "RecordType", "RecordTypeId",
-                    "RecordStatus", "CrossRefId", "SmSa", "DataSource", "SquareMiles", "Community", "CommunityId",
-                    "Population", "PopInterval", "PopIntervalId", "TypeEmps", "TypeEmpsId", "PaidEmps",
-                    "PaidEmpsWomen", "WorkWeek", "EmpsPerShift", "VolsComp", "Vols", "VolsWomen", "Pumpers",
-                    "Ladders", "Combo", "MarineVessels", "OtherSupport", "OtherVehicles", "ThermalEquipment",
-                    "Stations", "Ems", "EmsId", "Ambulance", "Dispatch", "DispatchId", "Training", "TrainingId",
-                    "CodeEnforcement", "CodeEnforcementId", "LastReturned", "LastSent", "Notes", "FdSurveyStatus1",
-                    "FdSurveyStatus2", "FdSurveyStatus3", "FdSurveyStatus4", "FdSurveyStatus5", "FdSurveyStatus6",
-                    "FdSurveyStatus7", "FdSurveyYears1", "FdSurveyYears2", "FdSurveyYears3", "FdSurveyYears4",
-                    "FdSurveyYears5", "FdSurveyYears6", "FdSurveyYears7"
-                };
+//         await foreach (var fsi in fsisToDownload)
+//         {
+//             if (!headersWritten)
+//             {
+//                 // Write Headers with proper escaping
+//                 var headers = new List<string>
+//                 {
+//                     "NfpaFdid", "NfirsId", "FdName", "CreatedDt", "UpdatedDt", "Street", "Street2", "City",
+//                     "CountyNo", "State", "StateId", "StateGroup", "StateGroupOverride", "Zipcode", "Zipcode2",
+//                     "Region", "Country", "AddressDt", "Phone", "PhoneDt", "Email", "EmailDt", "Fax", "FaxDt",
+//                     "ContactName", "ContactRank", "ContactRankId", "ContactDt", "RecordType", "RecordTypeId",
+//                     "RecordStatus", "CrossRefId", "SmSa", "DataSource", "SquareMiles", "Community", "CommunityId",
+//                     "Population", "PopInterval", "PopIntervalId", "TypeEmps", "TypeEmpsId", "PaidEmps",
+//                     "PaidEmpsWomen", "WorkWeek", "EmpsPerShift", "VolsComp", "Vols", "VolsWomen", "Pumpers",
+//                     "Ladders", "Combo", "MarineVessels", "OtherSupport", "OtherVehicles", "ThermalEquipment",
+//                     "Stations", "Ems", "EmsId", "Ambulance", "Dispatch", "DispatchId", "Training", "TrainingId",
+//                     "CodeEnforcement", "CodeEnforcementId", "LastReturned", "LastSent", "Notes", "FdSurveyStatus1",
+//                     "FdSurveyStatus2", "FdSurveyStatus3", "FdSurveyStatus4", "FdSurveyStatus5", "FdSurveyStatus6",
+//                     "FdSurveyStatus7", "FdSurveyYears1", "FdSurveyYears2", "FdSurveyYears3", "FdSurveyYears4",
+//                     "FdSurveyYears5", "FdSurveyYears6", "FdSurveyYears7"
+//                 };
 
-                await writer.WriteLineAsync(string.Join(",", headers));
-                headersWritten = true;
-            }
+//                 await writer.WriteLineAsync(string.Join(",", headers));
+//                 headersWritten = true;
+//             }
 
-            // Write Data Row with proper CSV escaping
-            var rowValues = new List<string>
-            {
-                EscapeCsvValue(fsi.NfpaFdid.ToString()),
-                EscapeCsvValue(fsi.NfirsId!),
-                EscapeCsvValue(fsi.FdName),
-                EscapeCsvValue(fsi.CreatedDt.ToString("yyyy-MM-dd HH:mm:ss")),
-                EscapeCsvValue(fsi.UpdatedDt.ToString("yyyy-MM-dd HH:mm:ss")),
-                EscapeCsvValue(fsi.Street!),
-                EscapeCsvValue(fsi.Street2!),
-                EscapeCsvValue(fsi.City!),
-                EscapeCsvValue(fsi.CountyNo.ToString()!),
-                EscapeCsvValue(fsi.State.ToString()),
-                EscapeCsvValue(fsi.StateId.ToString()!),
-                EscapeCsvValue(fsi.StateGroup.ToString()!),
-                EscapeCsvValue(fsi.StateGroupOverride.ToString()!),
-                EscapeCsvValue(fsi.Zipcode!),
-                EscapeCsvValue(fsi.Zipcode2!),
-                EscapeCsvValue(fsi.Region.ToString()),
-                EscapeCsvValue(fsi.Country.ToString()),
-                EscapeCsvValue(fsi.AddressDt.ToString("yyyy-MM-dd")),
-                EscapeCsvValue(fsi.Phone!),
-                EscapeCsvValue(fsi.PhoneDt.ToString("yyyy-MM-dd")),
-                EscapeCsvValue(fsi.Email!),
-                EscapeCsvValue(fsi.EmailDt.ToString("yyyy-MM-dd")),
-                EscapeCsvValue(fsi.Fax!),
-                EscapeCsvValue(fsi.FaxDt.ToString("yyyy-MM-dd")),
-                EscapeCsvValue(fsi.ContactName!),
-                EscapeCsvValue(fsi.ContactRank.ToString()),
-                EscapeCsvValue(fsi.ContactRankId.ToString()!),
-                EscapeCsvValue(fsi.ContactDt.ToString("yyyy-MM-dd")),
-                EscapeCsvValue(fsi.RecordType),
-                EscapeCsvValue(fsi.RecordTypeId.ToString()!),
-                EscapeCsvValue(fsi.RecordStatus.ToString()),
-                EscapeCsvValue(fsi.CrossRefId.ToString()!),
-                EscapeCsvValue(fsi.SmSa.ToString()!),
-                EscapeCsvValue(fsi.DataSource!),
-                EscapeCsvValue(fsi.SquareMiles.ToString()!),
-                EscapeCsvValue(fsi.Community.ToString()!),
-                EscapeCsvValue(fsi.CommunityId.ToString()!),
-                EscapeCsvValue(fsi.Population.ToString()!),
-                EscapeCsvValue(fsi.PopInterval.ToString()!),
-                EscapeCsvValue(fsi.PopIntervalId.ToString()!),
-                EscapeCsvValue(fsi.TypeEmps.ToString()!),
-                EscapeCsvValue(fsi.TypeEmpsId.ToString()!),
-                EscapeCsvValue(fsi.PaidEmps.ToString()!),
-                EscapeCsvValue(fsi.PaidEmpsWomen.ToString()!),
-                EscapeCsvValue(fsi.WorkWeek.ToString()!),
-                EscapeCsvValue(fsi.EmpsPerShift.ToString()!),
-                EscapeCsvValue(fsi.VolsComp.ToString()!),
-                EscapeCsvValue(fsi.Vols.ToString()!),
-                EscapeCsvValue(fsi.VolsWomen.ToString()!),
-                EscapeCsvValue(fsi.Pumpers.ToString()!),
-                EscapeCsvValue(fsi.Ladders.ToString()!),
-                EscapeCsvValue(fsi.Combo.ToString()!),
-                EscapeCsvValue(fsi.MarineVessels.ToString()!),
-                EscapeCsvValue(fsi.OtherSupport.ToString()!),
-                EscapeCsvValue(fsi.OtherVehicles.ToString()!),
-                EscapeCsvValue(fsi.ThermalEquipment.ToString()!),
-                EscapeCsvValue(fsi.Stations.ToString()!),
-                EscapeCsvValue(fsi.Ems.ToString()!),
-                EscapeCsvValue(fsi.EmsId.ToString()!),
-                EscapeCsvValue(fsi.Ambulance.ToString()!),
-                EscapeCsvValue(fsi.Dispatch.ToString()!),
-                EscapeCsvValue(fsi.DispatchId.ToString()!),
-                EscapeCsvValue(fsi.Training.ToString()!),
-                EscapeCsvValue(fsi.TrainingId.ToString()!),
-                EscapeCsvValue(fsi.CodeEnforcement.ToString()!),
-                EscapeCsvValue(fsi.CodeEnforcementId.ToString()!),
-                EscapeCsvValue(fsi.LastReturned.HasValue ? fsi.LastReturned.Value.ToString("yyyy-MM-dd") : string.Empty),
-                EscapeCsvValue(fsi.LastSent.HasValue ? fsi.LastSent.Value.ToString("yyyy-MM-dd") : string.Empty),
-                EscapeCsvValue(fsi.Notes!),
-                EscapeCsvValue(fsi.FdSurveyStatus1.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyStatus2.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyStatus3.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyStatus4.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyStatus5.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyStatus6.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyStatus7.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyYears1.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyYears2.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyYears3.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyYears4.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyYears5.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyYears6.ToString()!),
-                EscapeCsvValue(fsi.FdSurveyYears7.ToString()!)
-            };
+//             // Write Data Row with proper CSV escaping
+//             var rowValues = new List<string>
+//             {
+//                 EscapeCsvValue(fsi.NfpaFdid.ToString()),
+//                 EscapeCsvValue(fsi.NfirsId!),
+//                 EscapeCsvValue(fsi.FdName),
+//                 EscapeCsvValue(fsi.CreatedDt.ToString("yyyy-MM-dd HH:mm:ss")),
+//                 EscapeCsvValue(fsi.UpdatedDt.ToString("yyyy-MM-dd HH:mm:ss")),
+//                 EscapeCsvValue(fsi.Street!),
+//                 EscapeCsvValue(fsi.Street2!),
+//                 EscapeCsvValue(fsi.City!),
+//                 EscapeCsvValue(fsi.CountyNo.ToString()!),
+//                 EscapeCsvValue(fsi.State.ToString()),
+//                 EscapeCsvValue(fsi.StateId.ToString()!),
+//                 EscapeCsvValue(fsi.StateGroup.ToString()!),
+//                 EscapeCsvValue(fsi.StateGroupOverride.ToString()!),
+//                 EscapeCsvValue(fsi.Zipcode!),
+//                 EscapeCsvValue(fsi.Zipcode2!),
+//                 EscapeCsvValue(fsi.Region.ToString()),
+//                 EscapeCsvValue(fsi.Country.ToString()),
+//                 EscapeCsvValue(fsi.AddressDt.ToString("yyyy-MM-dd")),
+//                 EscapeCsvValue(fsi.Phone!),
+//                 EscapeCsvValue(fsi.PhoneDt.ToString("yyyy-MM-dd")),
+//                 EscapeCsvValue(fsi.Email!),
+//                 EscapeCsvValue(fsi.EmailDt.ToString("yyyy-MM-dd")),
+//                 EscapeCsvValue(fsi.Fax!),
+//                 EscapeCsvValue(fsi.FaxDt.ToString("yyyy-MM-dd")),
+//                 EscapeCsvValue(fsi.ContactName!),
+//                 EscapeCsvValue(fsi.ContactRank.ToString()),
+//                 EscapeCsvValue(fsi.ContactRankId.ToString()!),
+//                 EscapeCsvValue(fsi.ContactDt.ToString("yyyy-MM-dd")),
+//                 EscapeCsvValue(fsi.RecordType),
+//                 EscapeCsvValue(fsi.RecordTypeId.ToString()!),
+//                 EscapeCsvValue(fsi.RecordStatus.ToString()),
+//                 EscapeCsvValue(fsi.CrossRefId.ToString()!),
+//                 EscapeCsvValue(fsi.SmSa.ToString()!),
+//                 EscapeCsvValue(fsi.DataSource!),
+//                 EscapeCsvValue(fsi.SquareMiles.ToString()!),
+//                 EscapeCsvValue(fsi.Community.ToString()!),
+//                 EscapeCsvValue(fsi.CommunityId.ToString()!),
+//                 EscapeCsvValue(fsi.Population.ToString()!),
+//                 EscapeCsvValue(fsi.PopInterval.ToString()!),
+//                 EscapeCsvValue(fsi.PopIntervalId.ToString()!),
+//                 EscapeCsvValue(fsi.TypeEmps.ToString()!),
+//                 EscapeCsvValue(fsi.TypeEmpsId.ToString()!),
+//                 EscapeCsvValue(fsi.PaidEmps.ToString()!),
+//                 EscapeCsvValue(fsi.PaidEmpsWomen.ToString()!),
+//                 EscapeCsvValue(fsi.WorkWeek.ToString()!),
+//                 EscapeCsvValue(fsi.EmpsPerShift.ToString()!),
+//                 EscapeCsvValue(fsi.VolsComp.ToString()!),
+//                 EscapeCsvValue(fsi.Vols.ToString()!),
+//                 EscapeCsvValue(fsi.VolsWomen.ToString()!),
+//                 EscapeCsvValue(fsi.Pumpers.ToString()!),
+//                 EscapeCsvValue(fsi.Ladders.ToString()!),
+//                 EscapeCsvValue(fsi.Combo.ToString()!),
+//                 EscapeCsvValue(fsi.MarineVessels.ToString()!),
+//                 EscapeCsvValue(fsi.OtherSupport.ToString()!),
+//                 EscapeCsvValue(fsi.OtherVehicles.ToString()!),
+//                 EscapeCsvValue(fsi.ThermalEquipment.ToString()!),
+//                 EscapeCsvValue(fsi.Stations.ToString()!),
+//                 EscapeCsvValue(fsi.Ems.ToString()!),
+//                 EscapeCsvValue(fsi.EmsId.ToString()!),
+//                 EscapeCsvValue(fsi.Ambulance.ToString()!),
+//                 EscapeCsvValue(fsi.Dispatch.ToString()!),
+//                 EscapeCsvValue(fsi.DispatchId.ToString()!),
+//                 EscapeCsvValue(fsi.Training.ToString()!),
+//                 EscapeCsvValue(fsi.TrainingId.ToString()!),
+//                 EscapeCsvValue(fsi.CodeEnforcement.ToString()!),
+//                 EscapeCsvValue(fsi.CodeEnforcementId.ToString()!),
+//                 EscapeCsvValue(fsi.LastReturned.HasValue ? fsi.LastReturned.Value.ToString("yyyy-MM-dd") : string.Empty),
+//                 EscapeCsvValue(fsi.LastSent.HasValue ? fsi.LastSent.Value.ToString("yyyy-MM-dd") : string.Empty),
+//                 EscapeCsvValue(fsi.Notes!),
+//                 EscapeCsvValue(fsi.FdSurveyStatus1.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyStatus2.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyStatus3.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyStatus4.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyStatus5.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyStatus6.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyStatus7.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyYears1.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyYears2.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyYears3.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyYears4.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyYears5.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyYears6.ToString()!),
+//                 EscapeCsvValue(fsi.FdSurveyYears7.ToString()!)
+//             };
 
-            await writer.WriteLineAsync(string.Join(",", rowValues));
-            hasAny = true;
+//             await writer.WriteLineAsync(string.Join(",", rowValues));
+//             hasAny = true;
 
-            // Flush periodically to manage memory
-            if (memoryStream.Length > 1024 * 1024 * 10) // 10MB chunks
-            {
-                await writer.FlushAsync();
-            }
-        }
+//             // Flush periodically to manage memory
+//             if (memoryStream.Length > 1024 * 1024 * 10) // 10MB chunks
+//             {
+//                 await writer.FlushAsync();
+//             }
+//         }
 
-        if (!hasAny)
-        {
-            Message = "No FSI records found to download.";
-            memoryStream.Dispose();
-            return Stream.Null;
-        }
+//         if (!hasAny)
+//         {
+//             Message = "No FSI records found to download.";
+//             memoryStream.Dispose();
+//             return Stream.Null;
+//         }
 
-        await writer.FlushAsync();
-        memoryStream.Position = 0;
-        return memoryStream;
-    }
+//         await writer.FlushAsync();
+//         memoryStream.Position = 0;
+//         return memoryStream;
+//     }
 
-    private string EscapeCsvValue(object value)
-    {
-        if (value == null)
-            return string.Empty;
+//     private string EscapeCsvValue(object value)
+//     {
+//         if (value == null)
+//             return string.Empty;
 
-        var stringValue = value.ToString();
+//         var stringValue = value.ToString();
 
-        if (string.IsNullOrEmpty(stringValue))
-            return string.Empty;
+//         if (string.IsNullOrEmpty(stringValue))
+//             return string.Empty;
 
-        // Prefix fields that start with formula characters to prevent Excel from treating them as formulas
-        if (stringValue.StartsWith("=") || stringValue.StartsWith("+") ||
-            stringValue.StartsWith("-") || stringValue.StartsWith("@"))
-        {
-            stringValue = "'" + stringValue;
-        }
+//         // Prefix fields that start with formula characters to prevent Excel from treating them as formulas
+//         if (stringValue.StartsWith("=") || stringValue.StartsWith("+") ||
+//             stringValue.StartsWith("-") || stringValue.StartsWith("@"))
+//         {
+//             stringValue = "'" + stringValue;
+//         }
 
-        // Check if we need to quote the field
-        bool needsQuotes = stringValue.Contains(",") ||
-                          stringValue.Contains("\"") ||
-                          stringValue.Contains("\n") ||
-                          stringValue.Contains("\r") ||
-                          stringValue.Contains("\t");
+//         // Check if we need to quote the field
+//         bool needsQuotes = stringValue.Contains(",") ||
+//                           stringValue.Contains("\"") ||
+//                           stringValue.Contains("\n") ||
+//                           stringValue.Contains("\r") ||
+//                           stringValue.Contains("\t");
 
-        if (needsQuotes)
-        {
-            // Escape any existing quotes
-            stringValue = stringValue.Replace("\"", "\"\"");
-            return $"\"{stringValue}\"";
-        }
+//         if (needsQuotes)
+//         {
+//             // Escape any existing quotes
+//             stringValue = stringValue.Replace("\"", "\"\"");
+//             return $"\"{stringValue}\"";
+//         }
 
-        return stringValue;
-    }
+//         return stringValue;
+//     }
 
-    private async Task<Stream?> GenerateProtectedTownsCsvStreamAsync(ApplicationDbContext context)
-    {
-        var protectedTowns = context.ProtectedTowns.AsNoTracking().AsAsyncEnumerable();
+//     private async Task<Stream?> GenerateProtectedTownsCsvStreamAsync(ApplicationDbContext context)
+//     {
+//         var protectedTowns = context.ProtectedTowns.AsNoTracking().AsAsyncEnumerable();
 
-        var memoryStream = new MemoryStream();
-        await using var writer = new StreamWriter(memoryStream, Encoding.UTF8, leaveOpen: true);
+//         var memoryStream = new MemoryStream();
+//         await using var writer = new StreamWriter(memoryStream, Encoding.UTF8, leaveOpen: true);
 
-        // Write UTF-8 BOM
-        await writer.WriteAsync('\ufeff');
+//         // Write UTF-8 BOM
+//         await writer.WriteAsync('\ufeff');
 
-        bool hasAny = false;
-        await foreach (var town in protectedTowns)
-        {
-            if (!hasAny)
-            {
-                // Write Headers
-                await writer.WriteLineAsync(string.Join(",", new[]
-                {
-                    "TownProtectedId", "TownProtectedName", "NfpaFdid", "FdName", "City", "State",
-                    "StateId", "StateGroup", "StateGroupOverride", "CreatedDt", "UpdatedDt"
-                }));
-                hasAny = true;
-            }
+//         bool hasAny = false;
+//         await foreach (var town in protectedTowns)
+//         {
+//             if (!hasAny)
+//             {
+//                 // Write Headers
+//                 await writer.WriteLineAsync(string.Join(",", new[]
+//                 {
+//                     "TownProtectedId", "TownProtectedName", "NfpaFdid", "FdName", "City", "State",
+//                     "StateId", "StateGroup", "StateGroupOverride", "CreatedDt", "UpdatedDt"
+//                 }));
+//                 hasAny = true;
+//             }
 
-            // Write Data Rows with proper escaping
-            var rowValues = new List<string>
-            {
-                EscapeCsvValue(town.TownProtectedId.ToString()),
-                EscapeCsvValue(town.TownProtectedName),
-                EscapeCsvValue(town.NfpaFdid.ToString()),
-                EscapeCsvValue(town.FdName),
-                EscapeCsvValue(town.City!),
-                EscapeCsvValue(town.State.ToString()),
-                EscapeCsvValue(town.StateId.ToString()),
-                EscapeCsvValue(town.StateGroup.ToString()),
-                EscapeCsvValue(town.StateGroupOverride.ToString()!),
-                EscapeCsvValue(town.CreatedDt.ToString("yyyy-MM-dd HH:mm:ss")),
-                EscapeCsvValue(town.UpdatedDt.ToString("yyyy-MM-dd HH:mm:ss"))
-            };
+//             // Write Data Rows with proper escaping
+//             var rowValues = new List<string>
+//             {
+//                 EscapeCsvValue(town.TownProtectedId.ToString()),
+//                 EscapeCsvValue(town.TownProtectedName),
+//                 EscapeCsvValue(town.NfpaFdid.ToString()),
+//                 EscapeCsvValue(town.FdName),
+//                 EscapeCsvValue(town.City!),
+//                 EscapeCsvValue(town.State.ToString()),
+//                 EscapeCsvValue(town.StateId.ToString()),
+//                 EscapeCsvValue(town.StateGroup.ToString()),
+//                 EscapeCsvValue(town.StateGroupOverride.ToString()!),
+//                 EscapeCsvValue(town.CreatedDt.ToString("yyyy-MM-dd HH:mm:ss")),
+//                 EscapeCsvValue(town.UpdatedDt.ToString("yyyy-MM-dd HH:mm:ss"))
+//             };
 
-            await writer.WriteLineAsync(string.Join(",", rowValues));
+//             await writer.WriteLineAsync(string.Join(",", rowValues));
 
-            // Flush periodically
-            if (memoryStream.Length > 1024 * 1024 * 10) // 10MB chunks
-            {
-                await writer.FlushAsync();
-            }
-        }
+//             // Flush periodically
+//             if (memoryStream.Length > 1024 * 1024 * 10) // 10MB chunks
+//             {
+//                 await writer.FlushAsync();
+//             }
+//         }
 
-        if (!hasAny)
-        {
-            Message = "No Protected Towns records found to download.";
-            memoryStream.Dispose();
-            return Stream.Null;
-        }
+//         if (!hasAny)
+//         {
+//             Message = "No Protected Towns records found to download.";
+//             memoryStream.Dispose();
+//             return Stream.Null;
+//         }
 
-        await writer.FlushAsync();
-        memoryStream.Position = 0;
-        return memoryStream;
-    }
-}
-}
+//         await writer.FlushAsync();
+//         memoryStream.Position = 0;
+//         return memoryStream;
+//     }
+ }
+
 
 
 
